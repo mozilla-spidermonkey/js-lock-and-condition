@@ -1,4 +1,4 @@
-# Simple Lock and Condition Variable for JavaScript with SharedArrayBuffer and Atomics
+# Simple Lock and Condition Variable Library for JavaScript with SharedArrayBuffer and Atomics
 
 Locks and condition variables are basic abstractions that let concurrent programs coordinate access to shared memory.  This library provides simple implementations of two types, `Lock` and `Cond`, that will be sufficient for many concurrent JS programs.
 
@@ -28,7 +28,7 @@ While the `Lock` and `Cond` objects themselves will be garbage collected (becaus
 
 ## API
 
-Here's a synopsis.  For more information, see comments in [lock.js](lock.js).
+Here's a synopsis.  For more information, see comments in [lock.js](lock.js).  For an example of the use, see [test.js](test.js).
 
 ### Lock
 
@@ -36,9 +36,9 @@ Here's a synopsis.  For more information, see comments in [lock.js](lock.js).
 * `Lock.ALIGN` is the required byte alignment for a lock variable
 * `Lock.NUMBYTES` is the required storage allocation for a lock variable (always divisible by Lock.ALIGN)
 * `new Lock(sab, loc)` creates an agent-local lock object on the lock variable in shared memory
-* `Lock.prototype.lock` acquires a lock, blocking until it is available if necessary.  Locks are not recursive: an agent must not attempt to lock a lock that it is already holding.
-* `Lock.prototype.tryLock` acquires a lock (as if by `Lock.prototype.lock`) if it is available and if so returns `true`; otherwise does nothing and returns `false`.
-* `Lock.prototype.unlock` releases the lock.  An agent must not unlock a lock that is not acquired, though it need not have acquired the lock itself.
+* `Lock.prototype.lock()` acquires a lock, blocking until it is available if necessary.  Locks are not recursive: an agent must not attempt to lock a lock that it is already holding.
+* `Lock.prototype.tryLock()` acquires a lock (as if by `Lock.prototype.lock`) if it is available and if so returns `true`; otherwise does nothing and returns `false`.
+* `Lock.prototype.unlock()` releases the lock.  An agent must not unlock a lock that is not acquired, though it need not have acquired the lock itself.
 
 ### Cond
 
