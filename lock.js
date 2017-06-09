@@ -135,7 +135,7 @@ Lock.prototype.unlock = function () {
 }
 
 Lock.prototype.toString = function () {
-    return "Lock:{ibase:" + this.ibase +"}";
+    return "{/*Lock*/ loc:" + this.ibase*4 +"}";
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -234,5 +234,5 @@ Cond.prototype.wakeAll = function () {
 }
 
 Cond.prototype.toString = function () {
-    return "Cond:{ibase:" + this.ibase +"}";
+    return "{/*Cond*/ loc:" + this.ibase*4 +" lock:" + this.lock + "}";
 }
