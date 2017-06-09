@@ -1,4 +1,4 @@
-# Simple Lock and Condition Variable for JavaScript with SharedArrayBuffer and Atomics
+# Simple Lock and Condition Variable Library for JavaScript with SharedArrayBuffer and Atomics
 
 Locks and condition variables are basic abstractions that let concurrent programs coordinate access to shared memory.  This library provides simple implementations of two types, `Lock` and `Cond`, that will be sufficient for many concurrent JS programs.
 
