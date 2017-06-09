@@ -18,10 +18,8 @@
 // for a general introduction, test.js for examples, and comments below for API
 // specs.
 //
-// Lock and Cond have no mutable state (all mutable state is in the shared
-// memory) and can be copied freely, so long as you don't depend on object
-// identity of course.  Notably they can be transmitted among agents by
-// postMessage.
+// Lock and Cond have no mutable state - all mutable state is in the shared
+// memory.
 
 "use strict";
 

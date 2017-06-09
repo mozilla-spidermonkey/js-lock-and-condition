@@ -2,7 +2,7 @@
 
 Locks and condition variables are basic abstractions that let concurrent programs coordinate access to shared memory.  This library provides simple implementations of two types, `Lock` and `Cond`, that will be sufficient for many concurrent JS programs.
 
-Both `Lock` and `Cond` are JS objects that use a little shared memory for coordination.  You can pass them around as you would pass around any JS value, and if you treat them as read-only you can send them through channels with `postMessage` and have them work as expected where they are received.
+Both `Lock` and `Cond` are JS objects that use a little shared memory for coordination.  You can pass them around as you would pass around any JS value, and they have no mutable state - all mutable state is in the shared memory.
 
 ## Usage
 
