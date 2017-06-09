@@ -14,13 +14,20 @@
    limitations under the License.
 */
 
-// Simple, standalone lock and condition variable abstractions.
+// Simple, standalone lock and condition variable abstractions.  See README.md
+// for a general introduction, test.js for examples, and comments below for API
+// specs.
+//
+// Lock and Cond have no mutable state (all mutable state is in the shared
+// memory) and can be copied freely, so long as you don't depend on object
+// identity of course.  Notably they can be transmitted among agents by
+// postMessage.
 
 "use strict";
 
 // Private
 
-let _checkBuffer = function (sab, loc, truth, who) {
+let _checkParameters = function (sab, loc, truth, who) {
     if (!(sab instanceof SharedArrayBuffer &&
 	  loc|0 == loc &&
 	  loc >= 0 &&
@@ -64,16 +71,16 @@ let _checkBuffer = function (sab, loc, truth, who) {
 // Returns `loc`.
 
 Lock.initialize = function (sab, loc) {
-    _checkBuffer(sab, loc, Lock, "Lock initializer");
+    _checkParameters(sab, loc, Lock, "Lock initializer");
     Atomics.store(new Int32Array(sab, loc, 1), 0, 0);
     return loc;
 }
 
-// Number of shared byte locations needed by the lock.
+// Number of shared byte locations needed by the lock.  A multiple of 4.
 
 Lock.NUMBYTES = 4;
 
-// Byte alignment needed by the lock.
+// Byte alignment needed by the lock.  A multiple of 4.
 
 Lock.ALIGN = 4;
 
@@ -84,7 +91,7 @@ Lock.ALIGN = 4;
 // be space at 'loc' for at least Lock.NUMBYTES.
 
 function Lock(sab, loc) {
-    _checkBuffer(sab, loc, Lock, "Lock constructor");
+    _checkParameters(sab, loc, Lock, "Lock constructor");
     this.iab = new Int32Array(sab); // View the whole thing so we can share with Cond
     this.ibase = loc >>> 2;
 }
@@ -163,7 +170,7 @@ Lock.prototype.toString = function () {
 // Returns 'loc'.
 
 Cond.initialize = function (sab, loc) {
-    _checkBuffer(sab, loc, Cond, "Cond initializer");
+    _checkParameters(sab, loc, Cond, "Cond initializer");
     Atomics.store(new Int32Array(sab, loc, 1), 0, 0);
     return loc;
 }
@@ -175,17 +182,18 @@ Cond.initialize = function (sab, loc) {
 // Cond.ALIGN, and there must be space at `loc` for at least Cond.NUMBYTES.
 
 function Cond(lock, loc) {
-    _checkBuffer(lock instanceof Lock ? lock.iab.buffer : lock, loc, Cond, "Cond constructor");
+    _checkParameters(lock instanceof Lock ? lock.iab.buffer : lock, loc, Cond, "Cond constructor");
     this.iab = lock.iab;
     this.ibase = loc >>> 2;
     this.lock = lock;
 }
 
-// Number of shared byte locations needed by the condition variable.
+// Number of shared byte locations needed by the condition variable.  A multiple
+// of 4.
 
 Cond.NUMBYTES = 4;
 
-// Byte alignment needed by the lock.
+// Byte alignment needed by the lock.  A multiple of 4.
 
 Cond.ALIGN = 4;
 
