@@ -57,11 +57,11 @@ for ( let i=0 ; i < numworkers ; i++ )
 
 function message(m) {
     m = String(m);
-    console.log(m);
+    document.getElementById("scrool").innerHTML += m + "<br>";
     if (m.match("proxy")) {
 	if (i32[0] == sum)
-	    console.log("DONE: " + i32[0]);
+	    message("DONE: " + i32[0]);
 	else
-	    console.log("FAILED: got " + i32[0] + ", expected " + sum);
+	    message("FAILED: got " + i32[0] + ", expected " + sum);
     }
 }
