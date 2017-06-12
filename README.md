@@ -28,7 +28,7 @@ While the `Lock` and `Cond` objects themselves will be garbage collected (becaus
 
 ## API
 
-Here's a synopsis.  For more information, see comments in [lock.js](lock.js).  For an example of the use, see [shell-test.js](shell-test.js).
+Here's a synopsis.  For more information, see comments in [lock.js](lock.js).  For an example of the use, see [browser-test.html](browser-test.html) for code for a web browser, or [shell-test.js](shell-test.js) for code for a JavaScript shell.
 
 ### Lock
 

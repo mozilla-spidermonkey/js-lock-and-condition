@@ -15,8 +15,8 @@
 */
 
 // Simple, standalone lock and condition variable abstractions.  See README.md
-// for a general introduction, shell-test.js for examples, and comments below
-// for API specs.
+// for a general introduction, browser-test.html and shell-test.js for examples,
+// and comments below for API specs.
 //
 // Lock and Cond have no mutable state - all mutable state is in the shared
 // memory.
