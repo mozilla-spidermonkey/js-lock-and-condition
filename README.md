@@ -2,21 +2,25 @@
 
 Locks and condition variables are basic abstractions that let concurrent programs coordinate access to shared memory.  This library provides simple implementations of two types, `Lock` and `Cond`, that will be sufficient for many concurrent JS programs.
 
-Both `Lock` and `Cond` are JS objects that use a little shared memory for coordination.  You can pass them around as you would pass around any JS value, and they have no mutable state - all mutable state is in the shared memory.  They can be serialized and sent by `postMessage` between workers.
+Both `Lock` and `Cond` are JS objects that use a little shared memory for coordination.  You can pass these objects around as you would pass around any other JS value, and the objects themselves have no mutable state - all the mutable state is in the shared memory.  The objects can therefore be serialized and deserialized, and can be sent by `postMessage` between workers if that's your thing.
 
 ## Usage
 
 To use the locking library, first load `"lock.js"`.
 
-Instances of `Lock` and `Cond` are variables in shared memory, and you must yourself manage the storage for them.  Suppose you have a `SharedArrayBuffer` called `sab` and you want to allocate a `Lock` variable.  You must decide where in `sab` your new variable is going to reside, let's call this index `loc`.  The index must be divisible by `Lock.ALIGN` (which is at least 4), and the variable must have exclusive access to `Lock.NUMBYTES` bytes (this property value is at least 4) starting at `loc`.
+### Managing the shared memory
 
-Now that you've allocated storage you must initialize it.  *One* agent must call `Lock.initialize(sab, loc)` to initialize the memory.  It must do this before any agent uses that memory for a lock.  (The simplest way to ensure that memory is properly initialized before any agent uses it is to initialize the memory before the `SharedArrayBuffer` is shared with other agents.)
+Each instance of `Lock` and `Cond` needs to have private use of a few bytes of shared memory, and you must yourself manage the shared storage for them.  Suppose you have created a `SharedArrayBuffer` called `sab` and you want to allocate space for a `Lock` object.  You must decide where in `sab` this space is going to allocated, let's call this index `loc`.  The index `loc` must be divisible by `Lock.ALIGN`, and the space that is needed is `Lock.NUMBYTES` bytes, starting at `loc`.  (It's the same for `Cond`, only with `Cond.ALIGN` and `Cond.NUMBYTES`.)
 
-Once the memory has been initialized you can create a new `Lock` object on it:
+Now that you've allocated shared storage you must initialize it.  *One* agent must call `Lock.initialize(sab, loc)` to initialize the memory for the lock.  It must perform the initialization before any agent uses that memory for a JS lock object.  (The simplest way to ensure that memory is properly initialized before any agent uses it is to initialize the memory before the `SharedArrayBuffer` is shared with other agents.)
+
+### Creating JS values on the shared memory
+
+Once the shared memory has been initialized you can create a new `Lock` object on it:
 ```js
 let lock = new Lock(sab, loc);
 ```
-If you create a new `Lock` on the same memory in multiple agents, then the agents can use that lock to coordinate access to shared memory.  If two agents call the lock's `lock` method at the same time, only one of them will be allowed to proceed; the other will be blocked until the agent that obtained the lock releases it with a call to the lock's `unlock` method.  If both agents attempt to execute the following code, all reads and writes in one agent will be done before all reads and writes in the other:
+If you create a new `Lock` on the same shared memory area in multiple agents, then the agents can use that lock to coordinate access to any part of shared memory.  If two agents call the lock's `lock` method at the same time, only one of them will be allowed to proceed; the other will be blocked until the agent that first obtained the lock releases it with a call to the lock's `unlock` method.  If both agents attempt to execute the following code, all reads and writes in one agent will be done before all reads and writes in the other:
 ```js
 let i32 = new Int32Array(sab)
 ...
@@ -26,11 +30,11 @@ i32[0] += 1
 lock.unlock()
 ```
 
-While the `Lock` and `Cond` objects themselves will be garbage collected (because they are just JS values), you must yourself determine when the shared memory used for a lock variable may be reused for something else.  In many programs, you'll just allocate space for the locks and condition variables at the start of the program and never worry about reusing it.
+While the `Lock` and `Cond` objects themselves will be garbage collected (because they are just JS values), you must yourself determine when the shared memory used by those objects may be reused for something else.  This is often hard, and in many programs, you'll just allocate shared memory for the locks and condition variables at the start of the program and never worry about reusing it.
 
 ## API
 
-Here's a synopsis.  For more information, see comments in [lock.js](lock.js).  For an example of the use, see [browser-test.html](browser-test.html) for code for a web browser, or [shell-test.js](shell-test.js) for code for a JavaScript shell.
+Here's a synopsis of the API.  For more information, see comments in [lock.js](lock.js).  For an example of the use, see [browser-test.html](browser-test.html) for code for a web browser, or [shell-test.js](shell-test.js) for code for a JavaScript shell.
 
 ### Lock
 
@@ -58,17 +62,28 @@ Here's a synopsis.  For more information, see comments in [lock.js](lock.js).  F
 
 ## Locking and waiting on the browser's main thread
 
-Web browsers will not allow JS code running on the "main" thread of a window to block, so `Lock.prototype.lock` and `Cond.prototype.wait` cannot in general be called on the window's main thread (if you call them, they will throw exceptions).  The main thread can still call eg `Lock.prototype.unlock`, `Cond.prototype.wakeOne`, and `Cond.prototype.wakeAll` however.
+Web browsers will not allow JS code running on the "main" thread of a window to block, so `Lock.prototype.lock()` and `Cond.prototype.wait()` cannot in general be called on the window's main thread (if you call them, they will throw exceptions).  The main thread can still call `Lock.prototype.tryLock()`, `Lock.prototype.unlock()`, `Cond.prototype.wakeOne()`, and `Cond.prototype.wakeAll()`.
 
-By also loading the file `"async-lock.js"` you get access to two more methods:
+However, by also loading the file `"async-lock.js"` you get access to two additional methods:
 
-* `Lock.prototype.asyncLock` may eventually obtain the lock but will not block in the mean time.  You `await` this on the main thread instead of calling `Lock.prototype.lock`, and when the `await` completes the lock is acquired
-* `Cond.prototype.asyncWait` may eventually receive a notification but will not block in the mean time.  You `await` this on the main thread instead of calling `Cond.prototype.wait`, and when the `await` completes the condition variable has been notified and the lock has been re-acquired
+* `Lock.prototype.asyncLock()` may eventually obtain the lock but will not block in the mean time.  You `await` a call to this method on the main thread instead of calling `Lock.prototype.lock`, and when the `await` completes the lock is acquired
+* `Cond.prototype.asyncWait()` may eventually receive a notification but will not block in the mean time.  You `await` a call to this on the main thread instead of calling `Cond.prototype.wait`, and when the `await` completes the condition variable has been notified and the lock has been re-acquired
 
-See [browser-async-test.html](browser-async-test.html) for some demo and test code.  The async methods can be used in Workers as well, but have less utility there.
+The example from above would look like this:
+```js
+async function f() {
+   ...
+   await lock.asyncLock()
+   i32[1] = i32[2] + i32[3];
+   i32[0] += 1
+   lock.unlock()
+   ...
+}
+```
+See [browser-async-test.html](browser-async-test.html) for some demo and test code.  The async methods can be used in Workers as well, but are less useful there.
 
 ## Limitations
 
-`Lock` and `Cond` are meant to be easy to understand and easy to work with; higher performance locks are likely possible.
+`Lock` and `Cond` are meant to be easy to understand and easy to work with; higher performance locks are possible.
 
-The `asyncLock` and `asyncWait` methods use a fairly expensive polyfill, and go through the browser's promise resolution machinery.  They are probably quite slow in practice but do allow the main thread to communicate through shared memory with its workers.
+The `asyncLock` and `asyncWait` methods use a fairly expensive implementation and in addition make use of the browser's promise resolution machinery, which is relatively expensive.  These methods are probably quite slow in practice, but they do allow the main thread to communicate reliably through shared memory with its workers.
