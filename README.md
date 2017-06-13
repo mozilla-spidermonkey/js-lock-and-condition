@@ -52,4 +52,6 @@ Here's a synopsis.  For more information, see comments in [lock.js](lock.js).  F
 
 ## Limitations
 
-Web browsers will not allow JS code running on the "main" thread of a window to block, so `Lock.prototype.lock`, `Lock.prototype.tryLock`, and `Cond.prototype.wait` cannot in general be called on the window's main thread.  The main thread can still call eg `Lock.prototype.unlock`, `Cond.prototype.wake`, and `Cond.prototype.wakeAll`.
+Web browsers will not allow JS code running on the "main" thread of a window to block, so `Lock.prototype.lock`, `Lock.prototype.tryLock`, and `Cond.prototype.wait` cannot in general be called on the window's main thread.  ([Issue #5](https://github.com/lars-t-hansen/js-lock-and-condition/issues/5) discusses how we might work around that.)  The main thread can still call eg `Lock.prototype.unlock`, `Cond.prototype.wake`, and `Cond.prototype.wakeAll`.
+
+`Lock` and `Cond` are meant to be easy to understand and easy to work with; higher performance locks are likely possible.
