@@ -2,9 +2,11 @@
 
 Locks and condition variables are basic abstractions that let concurrent programs coordinate access to shared memory.  This library provides simple implementations of two types, `Lock` and `Cond`, that will be sufficient for many concurrent JS programs.
 
-Both `Lock` and `Cond` are JS objects that use a little shared memory for coordination.  You can pass them around as you would pass around any JS value, and they have no mutable state - all mutable state is in the shared memory.
+Both `Lock` and `Cond` are JS objects that use a little shared memory for coordination.  You can pass them around as you would pass around any JS value, and they have no mutable state - all mutable state is in the shared memory.  They can be serialized and sent by `postMessage` between workers.
 
 ## Usage
+
+To use the locking library, first load `"lock.js"`.
 
 Instances of `Lock` and `Cond` are variables in shared memory, and you must yourself manage the storage for them.  Suppose you have a `SharedArrayBuffer` called `sab` and you want to allocate a `Lock` variable.  You must decide where in `sab` your new variable is going to reside, let's call this index `loc`.  The index must be divisible by `Lock.ALIGN` (which is at least 4), and the variable must have exclusive access to `Lock.NUMBYTES` bytes (this property value is at least 4) starting at `loc`.
 
@@ -36,7 +38,7 @@ Here's a synopsis.  For more information, see comments in [lock.js](lock.js).  F
 * `Lock.ALIGN` is the required byte alignment for a lock variable
 * `Lock.NUMBYTES` is the required storage allocation for a lock variable (always divisible by Lock.ALIGN)
 * `new Lock(sab, loc)` creates an agent-local lock object on the lock variable in shared memory
-* `Lock.prototype.lock()` acquires a lock, blocking until it is available if necessary.  Locks are not recursive: an agent must not attempt to lock a lock that it is already holding
+* `Lock.prototype.lock()` acquires a lock, blocking until it is available if necessary.  Locks are not recursive: an agent must not attempt to lock a lock that it is already holding.  This method does not work on the browser's main thread; see below
 * `Lock.prototype.tryLock()` acquires a lock (as if by `Lock.prototype.lock`) if it is available and if so returns `true`; otherwise does nothing and returns `false`
 * `Lock.prototype.unlock()` releases the lock.  An agent must not unlock a lock that is not acquired, though it need not have acquired the lock itself
 * `Lock.prototype.serialize()` returns an Object with a field `isLockObject` that is true, and other enumerable fields.  This Object can be transmitted eg by `postMessage`
@@ -48,14 +50,25 @@ Here's a synopsis.  For more information, see comments in [lock.js](lock.js).  F
 * `Cond.ALIGN` is the required byte alignment for a condition variable
 * `Cond.NUMBYTES` is the required storage allocation for a condition variable (always divisible by Cond.ALIGN)
 * `new Cond(lock, loc)` creates an agent-local condition-variable object on the condition variable in shared memory, for a given lock.  Here the `lock` is a `Lock` object; the condition variable must be in the same memory as the lock.  The `lock` property of the new `Cond` object references that lock
-* `Cond.prototype.wait()` waits on a condition variable.  The condition variable's lock must be held when calling this
+* `Cond.prototype.wait()` waits on a condition variable.  The condition variable's lock must be held when calling this.  This method does not work on the browser's main thread; see below
 * `Cond.prototype.wakeOne()` wakes a single waiter on a condition variable.  The condition variable's lock must be held when calling this
 * `Cond.prototype.wakeAll()` wakes all waiters on a condition variable.  The condition variable's lock must be held when calling this
 * `Cond.prototype.serialize()` returns an Object with a field `isCondObject` that is true, and other enumerable fields.  This Object can be transmitted eg by `postMessage`
 * `Cond.deserialize(r)` creates a `Cond` object from a serialized representation `r`
 
+## Locking and waiting on the browser's main thread
+
+Web browsers will not allow JS code running on the "main" thread of a window to block, so `Lock.prototype.lock` and `Cond.prototype.wait` cannot in general be called on the window's main thread (if you call them, they will throw exceptions).  The main thread can still call eg `Lock.prototype.unlock`, `Cond.prototype.wakeOne`, and `Cond.prototype.wakeAll` however.
+
+By also loading the file `"async-lock.js"` you get access to two more methods:
+
+* `Lock.prototype.asyncLock` may eventually obtain the lock but will not block in the mean time.  You `await` this on the main thread instead of calling `Lock.prototype.lock`, and when the `await` completes the lock is acquired
+* `Cond.prototype.asyncWait` may eventually receive a notification but will not block in the mean time.  You `await` this on the main thread instead of calling `Cond.prototype.wait`, and when the `await` completes the condition variable has been notified and the lock has been re-acquired
+
+See [browser-async-test.html](browser-async-test.html) for some demo and test code.  The async methods can be used in Workers as well, but have less utility there.
+
 ## Limitations
 
-Web browsers will not allow JS code running on the "main" thread of a window to block, so `Lock.prototype.lock`, `Lock.prototype.tryLock`, and `Cond.prototype.wait` cannot in general be called on the window's main thread.  ([Issue #5](https://github.com/lars-t-hansen/js-lock-and-condition/issues/5) discusses how we might work around that.)  The main thread can still call eg `Lock.prototype.unlock`, `Cond.prototype.wake`, and `Cond.prototype.wakeAll`.
-
 `Lock` and `Cond` are meant to be easy to understand and easy to work with; higher performance locks are likely possible.
+
+The `asyncLock` and `asyncWait` methods use a fairly expensive polyfill, and go through the browser's promise resolution machinery.  They are probably quite slow in practice but do allow the main thread to communicate through shared memory with its workers.
