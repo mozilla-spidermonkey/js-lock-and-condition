@@ -12,7 +12,7 @@
 // LOAD THESE FILES FIRST:
 //
 //   lock.js
-//   async-main.js
+//   async-lock.js
 //   browser-common-defs.js
 
 // Create shared memory
