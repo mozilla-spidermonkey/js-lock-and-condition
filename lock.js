@@ -136,6 +136,21 @@ Lock.prototype.toString = function () {
     return "{/*Lock*/ loc:" + this._ibase*4 +"}";
 }
 
+// Return a representation that can be postMessage'd.  The result is an Object
+// with a property "isLockObject" whose value is true, and other fields.
+
+Lock.prototype.serialize = function () {
+    return { isLockObject: true, sab: this._iab.buffer, loc: this._ibase * 4 };
+}
+
+// Create a new Lock object from a serialized representation.
+
+Lock.deserialize = function (repr) {
+    if (typeof repr != "object" || repr == null || !repr.isLockObject)
+	return null;
+    return new Lock(repr.sab, repr.loc);
+}
+
 //////////////////////////////////////////////////////////////////////
 //
 // Condition variables.
@@ -236,4 +251,22 @@ Cond.prototype.wakeAll = function () {
 
 Cond.prototype.toString = function () {
     return "{/*Cond*/ loc:" + this._ibase*4 +" lock:" + this.lock + "}";
+}
+
+// Return a representation that can be postMessage'd.  The result is an Object
+// with a property "isCondObject" whose value is true, and other fields.
+
+Cond.prototype.serialize = function () {
+    return { isCondObject: true, lock: this.lock.serialize(), loc: this._ibase * 4 };
+}
+
+// Create a new Cond object from a serialized representation.
+
+Cond.deserialize = function (repr) {
+    if (typeof repr != "object" || repr == null || !repr.isCondObject)
+	return null;
+    let lock = Lock.deserialize(repr.lock);
+    if (!lock)
+	return null;
+    return new Cond(lock, repr.loc);
 }

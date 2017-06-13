@@ -39,6 +39,8 @@ Here's a synopsis.  For more information, see comments in [lock.js](lock.js).  F
 * `Lock.prototype.lock()` acquires a lock, blocking until it is available if necessary.  Locks are not recursive: an agent must not attempt to lock a lock that it is already holding
 * `Lock.prototype.tryLock()` acquires a lock (as if by `Lock.prototype.lock`) if it is available and if so returns `true`; otherwise does nothing and returns `false`
 * `Lock.prototype.unlock()` releases the lock.  An agent must not unlock a lock that is not acquired, though it need not have acquired the lock itself
+* `Lock.prototype.serialize()` returns an Object with a field `isLockObject` that is true, and other enumerable fields.  This Object can be transmitted eg by `postMessage`
+* `Lock.deserialize(r)` creates a `Lock` object from a serialized representation `r`
 
 ### Cond
 
@@ -49,6 +51,8 @@ Here's a synopsis.  For more information, see comments in [lock.js](lock.js).  F
 * `Cond.prototype.wait()` waits on a condition variable.  The condition variable's lock must be held when calling this
 * `Cond.prototype.wakeOne()` wakes a single waiter on a condition variable.  The condition variable's lock must be held when calling this
 * `Cond.prototype.wakeAll()` wakes all waiters on a condition variable.  The condition variable's lock must be held when calling this
+* `Cond.prototype.serialize()` returns an Object with a field `isCondObject` that is true, and other enumerable fields.  This Object can be transmitted eg by `postMessage`
+* `Cond.deserialize(r)` creates a `Cond` object from a serialized representation `r`
 
 ## Limitations
 

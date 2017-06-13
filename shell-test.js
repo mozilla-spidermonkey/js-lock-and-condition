@@ -19,8 +19,8 @@ var iLoc = 100;
 var msgLoc = 200;
 
 // parameters
-var inner = 10000000;
-var outer = 100000;
+var inner = 1000000;
+var outer = 10000;
 
 // data structures
 var lock = new Lock(sab, lockLoc);
@@ -78,3 +78,22 @@ for ( let i=0 ; i < numworkers ; i++ )
     sum += inner*(5+i);
 
 assertEq(i32[0], sum);
+
+// Misc sanity tests
+
+{
+    let a = lock.serialize();
+    assertEq(a.isLockObject, true);
+    let b = Lock.deserialize(a);
+    assertEq(lock._iab.buffer, b._iab.buffer);
+    assertEq(lock._ibase, b._ibase);
+}
+
+{
+    let a = cond.serialize();
+    assertEq(a.isCondObject, true);
+    let b = Cond.deserialize(a);
+    assertEq(cond._iab.buffer, b._iab.buffer);
+    assertEq(cond._ibase, b._ibase);
+    assertEq(cond.lock._ibase.buffer, b.lock._ibase.buffer);
+}
