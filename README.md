@@ -36,19 +36,19 @@ Here's a synopsis.  For more information, see comments in [lock.js](lock.js).  F
 * `Lock.ALIGN` is the required byte alignment for a lock variable
 * `Lock.NUMBYTES` is the required storage allocation for a lock variable (always divisible by Lock.ALIGN)
 * `new Lock(sab, loc)` creates an agent-local lock object on the lock variable in shared memory
-* `Lock.prototype.lock()` acquires a lock, blocking until it is available if necessary.  Locks are not recursive: an agent must not attempt to lock a lock that it is already holding.
-* `Lock.prototype.tryLock()` acquires a lock (as if by `Lock.prototype.lock`) if it is available and if so returns `true`; otherwise does nothing and returns `false`.
-* `Lock.prototype.unlock()` releases the lock.  An agent must not unlock a lock that is not acquired, though it need not have acquired the lock itself.
+* `Lock.prototype.lock()` acquires a lock, blocking until it is available if necessary.  Locks are not recursive: an agent must not attempt to lock a lock that it is already holding
+* `Lock.prototype.tryLock()` acquires a lock (as if by `Lock.prototype.lock`) if it is available and if so returns `true`; otherwise does nothing and returns `false`
+* `Lock.prototype.unlock()` releases the lock.  An agent must not unlock a lock that is not acquired, though it need not have acquired the lock itself
 
 ### Cond
 
 * `Cond.initialize(sab, loc)` initializes a condition variable in the shared memory
 * `Cond.ALIGN` is the required byte alignment for a condition variable
 * `Cond.NUMBYTES` is the required storage allocation for a condition variable (always divisible by Cond.ALIGN)
-* `new Cond(lock, loc)` creates an agent-local condition-variable object on the condition variable in shared memory, for a given lock.  Here the `lock` is a `Lock` object; the condition variable must be in the same memory as the lock
-* `Cond.wait()` waits on a condition variable.  The condition variable's lock must be held when calling this
-* `Cond.wakeOne()` wakes a single waiter on a condition variable.  The condition variable's lock must be held when calling this
-* `Cond.wakeAll()` wakes all waiters on a condition variable.  The condition variable's lock must be held when calling this
+* `new Cond(lock, loc)` creates an agent-local condition-variable object on the condition variable in shared memory, for a given lock.  Here the `lock` is a `Lock` object; the condition variable must be in the same memory as the lock.  The `lock` property of the new `Cond` object references that lock
+* `Cond.prototype.wait()` waits on a condition variable.  The condition variable's lock must be held when calling this
+* `Cond.prototype.wakeOne()` wakes a single waiter on a condition variable.  The condition variable's lock must be held when calling this
+* `Cond.prototype.wakeAll()` wakes all waiters on a condition variable.  The condition variable's lock must be held when calling this
 
 ## Limitations
 

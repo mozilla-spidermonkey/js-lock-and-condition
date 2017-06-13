@@ -56,7 +56,7 @@ for ( let i=0 ; i < inner ; i++ ) {
 
 lock.lock();
 msg[0]++;
-cond.wake();
+cond.wakeOne();
 lock.unlock();
 `);
 

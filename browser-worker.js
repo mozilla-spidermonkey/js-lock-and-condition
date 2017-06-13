@@ -18,7 +18,7 @@ onmessage = function (ev) {
 
     lock.lock();
     msg[0]++;
-    cond.wake();
+    cond.wakeOne();
     lock.unlock();
 
     postMessage("Worker " + workerID + " finished");
