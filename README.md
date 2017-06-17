@@ -82,8 +82,10 @@ async function f() {
 ```
 See [browser-async-test.html](browser-async-test.html) for some demo and test code.  The async methods can be used in Workers as well, but are less useful there.
 
-## Limitations
+## Limitations, etc
 
 `Lock` and `Cond` are meant to be easy to understand and easy to work with; higher performance locks are possible.
 
 The `asyncLock` and `asyncWait` methods use a fairly expensive implementation and in addition make use of the browser's promise resolution machinery, which is relatively expensive.  These methods are probably quite slow in practice, but they do allow the main thread to communicate reliably through shared memory with its workers.
+
+The library is only intended to work with the new `SharedArrayBuffer` and `Atomics` objects in ECMAScript 2017.  Polyfills are not desirable, and, in the case of shared memory, scarcely possible.
