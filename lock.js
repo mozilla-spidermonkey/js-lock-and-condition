@@ -27,7 +27,7 @@
 
 let _checkParameters = function (sab, loc, truth, who) {
     if (!(sab instanceof SharedArrayBuffer &&
-	  loc|0 == loc &&
+	  (loc|0) == loc &&
 	  loc >= 0 &&
 	  loc % truth.ALIGN == 0 &&
 	  loc + truth.NUMBYTES <= sab.byteLength))
