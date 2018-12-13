@@ -49,8 +49,9 @@ let _checkParameters = function (sab, loc, truth, who) {
 // Lock.initialize() on the memory, before constructing the first Lock object in
 // any agent.
 //
-// Note that you should not call the "lock" and "tryLock" operations on the main
+// Note that you should not call the "lock" operation on the main
 // thread in a browser, because the main thread is not allowed to wait.
+// However, "tryLock" is OK.
 //
 // Implementation note:
 // Lock code taken from http://www.akkadia.org/drepper/futex.pdf.
