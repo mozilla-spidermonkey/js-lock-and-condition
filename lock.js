@@ -230,25 +230,30 @@ Cond.prototype.wait = function () {
     lock.lock();
 }
 
-// Wakes one waiter on cond.  The cond's lock must be held by the caller of
-// wake().
+// Notifies one waiter on cond.  The cond's lock must be held by the caller of
+// notifyOne().
 
-Cond.prototype.wakeOne = function () {
+Cond.prototype.notifyOne = function () {
     const iab = this._iab;
     const seqIndex = this._ibase;
     Atomics.add(iab, seqIndex, 1);
     Atomics.wake(iab, seqIndex, 1);
 }
 
-// Wakes all waiters on cond.  The cond's lock must be held by the caller of
-// wakeAll().
+// Notify all waiters on cond.  The cond's lock must be held by the caller of
+// notifyAll().
 
-Cond.prototype.wakeAll = function () {
+Cond.prototype.notifyAll = function () {
     const iab = this._iab;
     const seqIndex = this._ibase;
     Atomics.add(iab, seqIndex, 1);
     Atomics.wake(iab, seqIndex);
 }
+
+// Backward compatible aliases.
+
+Cond.prototype.wakeOne = Cond.prototype.notifyOne;
+Cond.prototype.wakeAll = Cond.prototype.notifyAll;
 
 Cond.prototype.toString = function () {
     return "{/*Cond*/ loc:" + this._ibase*4 +" lock:" + this.lock + "}";

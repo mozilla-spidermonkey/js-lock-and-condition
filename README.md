@@ -55,19 +55,19 @@ Here's a synopsis of the API.  For more information, see comments in [lock.js](l
 * `Cond.NUMBYTES` is the required storage allocation for a condition variable (always divisible by Cond.ALIGN)
 * `new Cond(lock, loc)` creates an agent-local condition-variable object on the condition variable in shared memory, for a given lock.  Here the `lock` is a `Lock` object; the condition variable must be in the same memory as the lock.  The `lock` property of the new `Cond` object references that lock
 * `Cond.prototype.wait()` waits on a condition variable.  The condition variable's lock must be held when calling this.  This method does not work on the browser's main thread; see below
-* `Cond.prototype.wakeOne()` wakes a single waiter on a condition variable.  The condition variable's lock must be held when calling this
-* `Cond.prototype.wakeAll()` wakes all waiters on a condition variable.  The condition variable's lock must be held when calling this
+* `Cond.prototype.notifyOne()` notifies a single waiter on a condition variable.  The condition variable's lock must be held when calling this
+* `Cond.prototype.notifyAll()` notifies all waiters on a condition variable.  The condition variable's lock must be held when calling this
 * `Cond.prototype.serialize()` returns an Object with a field `isCondObject` that is true, and other enumerable fields.  This Object can be transmitted eg by `postMessage`
 * `Cond.deserialize(r)` creates a `Cond` object from a serialized representation `r`
 
 ## Locking and waiting on the browser's main thread
 
-Web browsers will not allow JS code running on the "main" thread of a window to block, so `Lock.prototype.lock()` and `Cond.prototype.wait()` cannot in general be called on the window's main thread (if you call them, they will throw exceptions).  The main thread can still call `Lock.prototype.tryLock()`, `Lock.prototype.unlock()`, `Cond.prototype.wakeOne()`, and `Cond.prototype.wakeAll()`.
+Web browsers will not allow JS code running on the "main" thread of a window to block, so `Lock.prototype.lock()` and `Cond.prototype.wait()` cannot in general be called on the window's main thread (if you call them, they will throw exceptions).  The main thread can still call `Lock.prototype.tryLock()`, `Lock.prototype.unlock()`, `Cond.prototype.notifyOne()`, and `Cond.prototype.notifyAll()`.
 
 However, by also loading the file `"async-lock.js"` you get access to two additional methods:
 
 * `Lock.prototype.asyncLock()` may eventually obtain the lock but will not block in the mean time.  You `await` a call to this method on the main thread instead of calling `Lock.prototype.lock`, and when the `await` completes the lock is acquired
-* `Cond.prototype.asyncWait()` may eventually receive a notification but will not block in the mean time.  You `await` a call to this on the main thread instead of calling `Cond.prototype.wait`, and when the `await` completes the condition variable has been notified and the lock has been re-acquired
+* `Cond.prototype.asyncWait()` may eventually receive a notification but will not block in the mean time.  You `await` a call to this on the main thread instead of calling `Cond.prototype.wait()`, and when the `await` completes the condition variable has been notified and the lock has been re-acquired
 
 The example from above would look like this:
 ```js
