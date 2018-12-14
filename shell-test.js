@@ -31,7 +31,6 @@ var test = new Int32Array(sab, testLoc, 1);
 `;
 
 load("lock.js");
-load("async-lock.js");
 var sab = new SharedArrayBuffer(4096);
 eval(prefix);
 test[0] = 123456;          // Workers will look at this
@@ -57,7 +56,7 @@ for ( let i=0 ; i < inner ; i++ ) {
 
 lock.lock();
 msg[0]++;
-cond.wakeOne();
+cond.notifyOne();
 lock.unlock();
 `);
 
