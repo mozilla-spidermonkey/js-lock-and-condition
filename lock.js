@@ -14,6 +14,10 @@
    limitations under the License.
 */
 
+if (!this.Atomics) {
+    throw "Incompatible embedding: Atomics object not available";
+}
+
 // Simple, standalone lock and condition variable abstractions.  See README.md
 // for a general introduction, browser-test.html and shell-test.js for examples,
 // and comments below for API specs.
@@ -129,7 +133,7 @@ Lock.prototype.unlock = function () {
     // Wake up a waiter if there are any
     if (v0 != 1) {
         Atomics.store(iab, stateIdx, 0);
-        Atomics.wake(iab, stateIdx, 1);
+        Atomics.notify(iab, stateIdx, 1);
     }
 }
 
@@ -151,8 +155,9 @@ Lock.prototype.serialize = function () {
 // `repr` must have been produced by Lock.p.serialize().
 
 Lock.deserialize = function (repr) {
-    if (typeof repr != "object" || repr == null || !repr.isLockObject)
+    if (typeof repr != "object" || repr == null || !repr.isLockObject) {
 	return null;
+    }
     return new Lock(repr.sab, repr.loc);
 }
 
@@ -220,8 +225,8 @@ Cond.NUMBYTES = 4;
 
 Cond.ALIGN = 4;
 
-// Atomically unlock the cond's lock and wait for a wakeup on the cond.  If
-// there were waiters on lock then they are woken as the lock is unlocked.
+// Atomically unlock the cond's lock and wait for a notification on the cond.
+// If there were waiters on lock then they are notified as the lock is unlocked.
 //
 // The caller must hold the lock when calling wait().  When wait() returns the
 // lock will once again be held.
@@ -243,7 +248,7 @@ Cond.prototype.notifyOne = function () {
     const iab = this._iab;
     const seqIndex = this._ibase;
     Atomics.add(iab, seqIndex, 1);
-    Atomics.wake(iab, seqIndex, 1);
+    Atomics.notify(iab, seqIndex, 1);
 }
 
 // Notify all waiters on cond.  The Cond's lock must be held by the caller of
@@ -253,7 +258,7 @@ Cond.prototype.notifyAll = function () {
     const iab = this._iab;
     const seqIndex = this._ibase;
     Atomics.add(iab, seqIndex, 1);
-    Atomics.wake(iab, seqIndex);
+    Atomics.notify(iab, seqIndex);
 }
 
 // Backward compatible aliases.
@@ -279,10 +284,12 @@ Cond.prototype.serialize = function () {
 // `repr` must have been produced by Cond.p.serialize().
 
 Cond.deserialize = function (repr) {
-    if (typeof repr != "object" || repr == null || !repr.isCondObject)
+    if (typeof repr != "object" || repr == null || !repr.isCondObject) {
 	return null;
+    }
     let lock = Lock.deserialize(repr.lock);
-    if (!lock)
+    if (!lock) {
 	return null;
+    }
     return new Cond(lock, repr.loc);
 }
