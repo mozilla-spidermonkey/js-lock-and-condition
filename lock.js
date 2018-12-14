@@ -83,7 +83,7 @@ Lock.NUMBYTES = 4;
 
 Lock.ALIGN = 4;
 
-// Create a lock object.
+// Create a Lock object.
 //
 // `sab` must be a SharedArrayBuffer.
 // `loc` must be a valid index in `sab`, divisible by Lock.ALIGN, and there must
@@ -133,6 +133,8 @@ Lock.prototype.unlock = function () {
     }
 }
 
+// Debugging support.
+
 Lock.prototype.toString = function () {
     return "{/*Lock*/ loc:" + this._ibase*4 +"}";
 }
@@ -145,6 +147,8 @@ Lock.prototype.serialize = function () {
 }
 
 // Create a new Lock object from a serialized representation.
+//
+// `repr` must have been produced by Lock.p.serialize().
 
 Lock.deserialize = function (repr) {
     if (typeof repr != "object" || repr == null || !repr.isLockObject)
@@ -162,25 +166,27 @@ Lock.deserialize = function (repr) {
 // The number of shared bytes needed is given by Cond.NUMBYTES, and their
 // alignment in the SAB is given by Cond.ALIGN.
 //
-// The shared memory for a Condition variable should be initialized once by
-// calling Cond.initialize() on the memory, before constructing the first Cond
-// object in any agent.
+// The shared memory for a Cond variable should be initialized once by calling
+// Cond.initialize() on the memory, before constructing the first Cond object in
+// any agent.
 //
-// A Condition variable is always constructed on a Lock, which is available
-// as the `lock` property of the Cond instance.
+// A Cond variable is always constructed on a Lock, which is available as the
+// `lock` property of the Cond instance.  Note especially that the Cond and the
+// Lock must be constructed on the same SharedArrayBuffer.
 //
-// Note that you should not call the "wait" operation on the main thread in a
-// browser, because the main thread is not allowed to wait.
+// Note that you should not call the Cond.p.wait() operation from the main
+// thread in a browser, because the main thread is not allowed to wait.
 //
 //
 // Implementation note:
-// The condvar code is based on http://locklessinc.com/articles/mutex_cv_futex,
+// The Cond code is based on http://locklessinc.com/articles/mutex_cv_futex,
 // though modified because some optimizations in that code don't quite apply.
 
 // Initialize shared memory for a condition variable, before constructing the
 // worker-local Cond objects on that memory.
 //
-// 'sab' must be a SharedArrayBuffer.
+// `sab` must be a SharedArrayBuffer, the same SAB that is used by the Lock that
+// will be associated with the Cond.
 // `loc` must be a valid index in `sab`, divisible by Cond.ALIGN, and there must
 // be space at 'loc' for at least Cond.NUMBYTES.
 //
@@ -194,7 +200,7 @@ Cond.initialize = function (sab, loc) {
 
 // Create a condition variable that can wait on a lock.
 //
-// `lock` must be a Lock instance
+// `lock` must be a Lock instance.
 // `loc` must be a valid index in the shared memory of `lock`, divisible by
 // Cond.ALIGN, and there must be space at `loc` for at least Cond.NUMBYTES.
 
@@ -230,7 +236,7 @@ Cond.prototype.wait = function () {
     lock.lock();
 }
 
-// Notifies one waiter on cond.  The cond's lock must be held by the caller of
+// Notifies one waiter on cond.  The Cond's lock must be held by the caller of
 // notifyOne().
 
 Cond.prototype.notifyOne = function () {
@@ -240,7 +246,7 @@ Cond.prototype.notifyOne = function () {
     Atomics.wake(iab, seqIndex, 1);
 }
 
-// Notify all waiters on cond.  The cond's lock must be held by the caller of
+// Notify all waiters on cond.  The Cond's lock must be held by the caller of
 // notifyAll().
 
 Cond.prototype.notifyAll = function () {
@@ -255,6 +261,8 @@ Cond.prototype.notifyAll = function () {
 Cond.prototype.wakeOne = Cond.prototype.notifyOne;
 Cond.prototype.wakeAll = Cond.prototype.notifyAll;
 
+// Debugging support.
+
 Cond.prototype.toString = function () {
     return "{/*Cond*/ loc:" + this._ibase*4 +" lock:" + this.lock + "}";
 }
@@ -267,6 +275,8 @@ Cond.prototype.serialize = function () {
 }
 
 // Create a new Cond object from a serialized representation.
+//
+// `repr` must have been produced by Cond.p.serialize().
 
 Cond.deserialize = function (repr) {
     if (typeof repr != "object" || repr == null || !repr.isCondObject)
