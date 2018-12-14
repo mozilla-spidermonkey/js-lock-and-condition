@@ -92,6 +92,10 @@ async function f() {
 ```
 See [browser-async-test.html](browser-async-test.html) for some demo and test code.  The async methods can be used in Workers as well, but are less useful there.
 
+## Browser compatibility
+
+The library requires the `SharedArrayBuffer` and `Atomics` objects in ECMAScript 2017, and the `Atomics.notify` method.  These are supported by default in Chrome 70 and later; they are also supported in Firefox 65 and later if the switch `javascript.options.shared_memory` is set to `true` in the `about:config` panel.  According to [caniuse.com](https://caniuse.com/#search=Shared%20Array) there is also support behind a flag for other Chromium-based browsers as well as for Edge and Safari, but I have not tested this. 
+
 ## Limitations, etc
 
 `Lock` and `Cond` are meant to be easy to understand and easy to work with; higher performance locks are possible.
