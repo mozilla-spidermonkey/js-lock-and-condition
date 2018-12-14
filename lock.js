@@ -17,6 +17,9 @@
 if (!this.Atomics) {
     throw "Incompatible embedding: Atomics object not available";
 }
+if (Atomics.wake && !Atomics.notify) {
+    Atomics.notify = Atomics.wake;
+}
 
 // Simple, standalone lock and condition variable abstractions.  See README.md
 // for a general introduction, browser-test.html and shell-test.js for examples,
