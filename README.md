@@ -12,9 +12,17 @@ To use the locking library, first load `"lock.js"`.
 
 Each instance of `Lock` and `Cond` needs to have private use of a few bytes of shared memory, and you must yourself manage the shared storage for them.  Suppose you have created a `SharedArrayBuffer` called `sab` and you want to allocate space for a `Lock` object.  You must decide where in `sab` this space is going to allocated, let's call this index `loc`.  The index `loc` must be divisible by `Lock.ALIGN`, and the space that is needed is `Lock.NUMBYTES` bytes, starting at `loc`.  (It's the same for `Cond`, only with `Cond.ALIGN` and `Cond.NUMBYTES`.)
 
-Now that you've allocated shared storage you must initialize it.  *One* agent must call `Lock.initialize(sab, loc)` to initialize the memory for the lock.  It must perform the initialization before any agent uses that memory for a JS lock object.  (The simplest way to ensure that memory is properly initialized before any agent uses it is to initialize the memory before `sab` is shared with other agents.)
+Now that you've allocated shared storage you must initialize it.  *One* agent must perform the initialization per Lock:
+```js
+Lock.initialize(sab, loc)
+```
+The initialization must be performed before any agent uses that memory for a Lock object.  (The simplest way to ensure that memory is properly initialized before any agent uses it is to initialize the memory before `sab` is shared with other agents.)
 
-Space for a `Cond` is initialized in the same way.  Note that a `Cond` is always used with a `Lock` and that the pair must be constructed on the same `SharedArrayBuffer` instance.
+Space for a `Cond` is initialized in the same way:
+```
+Cond.initialize(sab, loc)
+```
+Note that a `Cond` is always used with a `Lock` and that the pair must be constructed on the same `sab`, but for different `loc` values.
 
 ### Creating JS values on the shared memory
 
