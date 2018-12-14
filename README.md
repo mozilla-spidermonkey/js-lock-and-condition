@@ -19,7 +19,7 @@ Lock.initialize(sab, loc)
 The initialization must be performed before any agent uses that memory for a Lock object.  (The simplest way to ensure that memory is properly initialized before any agent uses it is to initialize the memory before `sab` is shared with other agents.)
 
 Space for a `Cond` is initialized in the same way:
-```
+```js
 Cond.initialize(sab, loc)
 ```
 Note that a `Cond` is always used with a `Lock` and that the pair must be constructed on the same `sab`, but for different `loc` values.
