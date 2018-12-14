@@ -1,5 +1,18 @@
 # Simple Lock and Condition Variable Library for JavaScript with SharedArrayBuffer and Atomics
 
+* [Overview](#overview)
+* [Usage](#usage)
+* [Managing the shared memory](#managing-the-shared-memory)
+* [Creating JS values on the shared memory](#creating-js-values-on-the-shared-memory)
+* [API](#api)
+  * [Lock](#lock)
+  * [Cond](#cond)
+* [Locking and waiting on the browser's main thread](#locking-and-waiting-on-the-browsers-main-thread)
+* [Browser compatibility](#browser-compatibility)
+* [Limitations, etc](#limitations-etc)
+
+## Overview
+
 Locks and condition variables are basic abstractions that let concurrent programs coordinate access to shared memory.  This library provides simple implementations of two types, `Lock` and `Cond`, that will be sufficient for many concurrent JS programs.
 
 Both `Lock` and `Cond` are JS objects that use a little shared memory for coordination.  You can pass these objects around as you would pass around any other JS value, and the objects themselves have no mutable state - all the mutable state is in the shared memory.  The objects can therefore be serialized and deserialized, and can be sent by `postMessage` between workers if that's your thing.
